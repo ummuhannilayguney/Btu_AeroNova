@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Global City Explorer</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: radial-gradient(ellipse at center, #0a0a0a 0%, #050508 25%, #020202 50%, #000000 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .signup-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+            font-size: 28px;
+            color: #1e90ff;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #1e90ff;
+            box-shadow: 0 0 10px rgba(30, 144, 255, 0.3);
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .signup-btn {
+            width: 100%;
+            padding: 12px;
+            background: #32cd32;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .signup-btn:hover {
+            background: #228b22;
+            box-shadow: 0 0 15px rgba(50, 205, 50, 0.5);
+        }
+
+        .send-code-btn {
+            padding: 8px 12px;
+            background: #1e90ff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            min-width: 80px;
+        }
+
+        .send-code-btn:hover {
+            background: #4169e1;
+            box-shadow: 0 0 10px rgba(30, 144, 255, 0.4);
+        }
+
+        .send-code-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .verification-sent {
+            color: #32cd32;
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .back-link {
+            margin-top: 20px;
+            display: inline-block;
+            color: #1e90ff;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <h1> Sign Up</h1>
+        <form id="signupForm">
+            <div class="form-group">
+                <label for="fullName">Full Name:</label>
+                <input type="text" id="fullName" name="fullName" placeholder="Enter your full name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" placeholder="Create a password" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password:</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
+            </div>
+            
+            <div class="form-group" id="emailVerificationGroup" style="display: none;">
+                <label for="verificationCode">Email Verification Code:</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="text" id="verificationCode" name="verificationCode" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}">
+                    <button type="button" id="sendCodeBtn" class="send-code-btn">Send Code</button>
+                </div>
+                <small style="color: rgba(255,255,255,0.7); margin-top: 5px; display: block;">We'll send a verification code to your email</small>
+            </div>
+            
+            <button type="submit" class="signup-btn" id="signupButton">Send Verification Code</button>
+        </form>
+        
+        <a href="index.html" class="back-link">← Back to Globe Explorer</a>
+    </div>
+
+    <script>
+        let verificationSent = false;
+        let generatedCode = '';
+
+        document.getElementById('signupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fullName = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const verificationCode = document.getElementById('verificationCode').value;
+            const signupButton = document.getElementById('signupButton');
+            const emailVerificationGroup = document.getElementById('emailVerificationGroup');
+            
+            // Basic validation
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+            
+            if (!verificationSent) {
+                // First step: Send verification code
+                if (fullName && email && password && confirmPassword) {
+                    sendVerificationCode(email);
+                    emailVerificationGroup.style.display = 'block';
+                    signupButton.textContent = 'Complete Sign Up';
+                    verificationSent = true;
+                } else {
+                    alert('Please fill in all fields first!');
+                }
+            } else {
+                // Second step: Verify code and complete signup
+                if (verificationCode === generatedCode) {
+                    console.log('Signup completed:', { fullName, email, password });
+                    alert('✅ Account created successfully!\n\nName: ' + fullName + '\nEmail: ' + email + '\n\nWelcome to Global City Explorer!');
+                    
+                    // You can add your actual signup completion logic here
+                    // For example: send final data to server, redirect to login, etc.
+                } else {
+                    alert('❌ Invalid verification code! Please check your email and try again.');
+                }
+            }
+        });
+
+        // Send Code button functionality
+        document.getElementById('sendCodeBtn').addEventListener('click', function() {
+            const email = document.getElementById('email').value;
+            if (email) {
+                sendVerificationCode(email);
+            } else {
+                alert('Please enter your email first!');
+            }
+        });
+
+        function sendVerificationCode(email) {
+            // Generate random 6-digit code
+            generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
+            
+            // Simulate sending email (in real app, this would be sent to server)
+            console.log('Verification code sent to:', email);
+            console.log('Generated code (for testing):', generatedCode);
+            
+            // Show success message
+            const sendButton = document.getElementById('sendCodeBtn');
+            const originalText = sendButton.textContent;
+            sendButton.textContent = 'Sent!';
+            sendButton.disabled = true;
+            
+            // Add success indicator
+            let successMsg = document.querySelector('.verification-sent');
+            if (!successMsg) {
+                successMsg = document.createElement('small');
+                successMsg.className = 'verification-sent';
+                document.getElementById('emailVerificationGroup').appendChild(successMsg);
+            }
+            successMsg.textContent = `✅ Verification code sent to ${email}`;
+            
+            // Re-enable button after 30 seconds
+            setTimeout(() => {
+                sendButton.textContent = 'Resend';
+                sendButton.disabled = false;
+            }, 30000);
+            
+            // Alert with code (for testing - remove in production)
+            alert(`📧 Verification code sent to ${email}\n\n🔢 Code: ${generatedCode}\n\n(In production, this would be sent via email)`);
+        }
+    </script>
+</body>
+</html>

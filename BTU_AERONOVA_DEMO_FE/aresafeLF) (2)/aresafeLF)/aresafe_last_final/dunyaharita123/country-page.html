@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ülke Sayfası - Globe Explorer</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(ellipse at center, #1a1a2e 0%, #16213e 50%, #0f1419 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: white;
+            transition: background 1s ease-in-out;
+        }
+
+        /* Ülke bazlı arka planlar */
+        body[data-country="Turkey"] {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('./images/turkiye_bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        body[data-country="United States"] {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('./images/usa_bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        body[data-country="Canada"] {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('./images/kanada_bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        body[data-country="Mexico"] {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('./images/meksika_bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        body[data-country="Germany"] {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('./images/germany_bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        body[data-country="France"] {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('./images/france_bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        body[data-country="United Kingdom"] {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('./images/ingiltere_bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        body[data-country="Japan"] {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('./images/japan_bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        body[data-country="China"] {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('./images/cin_bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        body[data-country="Russia"] {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('./images/rusya_bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        body[data-country="Brazil"] {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('./images/brazil_bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        body[data-country="Australia"] {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('./images/australia_bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        body[data-country="India"] {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('./images/india_bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        body[data-country="South Korea"] {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('./images/south_korea_bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        body[data-country="Italy"] {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('./images/italy_bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        body[data-country="Spain"] {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('./images/spain_bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        /* Varsayılan dünya arka planı */
+        /*body[data-country="default"], body:not([data-country]) {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('./images/dunya.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+        .container { max-width: 1600px; margin: 0 auto; padding: 20px; position: relative; }
+        
+        /* Sol üst köşe buton */
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white; 
+            padding: 12px 20px; 
+            border-radius: 25px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        .back-btn:hover { 
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #87ceeb;
+            box-shadow: 0 0 10px rgba(135, 206, 235, 0.3);
+        }
+        
+        .header {
+            background: transparent;
+            padding: 20px; 
+            border-radius: 0;
+            margin-bottom: 40px;
+            backdrop-filter: none;
+            border: none;
+            text-align: center;
+        }
+        .header-left { display: flex; align-items: center; gap: 20px; }
+        .flag { font-size: 48px; }
+        .country-name { 
+            font-size: 36px; 
+            font-weight: 300; 
+            color: white; 
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .country-population {
+            font-size: 18px; 
+            color: rgba(255, 255, 255, 0.7); 
+            margin-top: 8px; 
+            font-weight: 300; 
+            text-align: center;
+        }
+        
+        .cities-section {
+            background: transparent; 
+            padding: 25px; 
+            border-radius: 0;
+            backdrop-filter: none; 
+            border: none;
+        }
+        .section-header {
+            text-align: center; 
+            margin-bottom: 40px;
+        }
+        .section-title { 
+            font-size: 28px; 
+            color: white; 
+            margin: 0; 
+            font-weight: 300;
+            text-align: center;
+        }
+        /* Arama çubuğu stili - Sağ üstte */
+        .search-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .search-input {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            color: white;
+            padding: 12px 20px;
+            font-size: 14px;
+            width: 300px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .search-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #87ceeb;
+            box-shadow: 0 0 10px rgba(135, 206, 235, 0.3);
+        }
+        .cities-grid { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .city-card {
+            background: rgba(255, 255, 255, 0.15); 
+            padding: 20px; 
+            border-radius: 15px;
+            transition: all 0.3s ease; 
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            min-height: 120px;
+        }
+        .city-card:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        .city-header { margin-bottom: 12px; }
+        .city-name { 
+            font-size: 20px; 
+            font-weight: 600; 
+            color: white; 
+            margin-bottom: 4px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 8px;
+        }
+        .city-population { 
+            font-size: 14px; 
+            color: rgba(255, 255, 255, 0.8); 
+            margin-top: 8px;
+        }
+        .city-info { 
+            font-size: 13px; 
+            color: rgba(255, 255, 255, 0.6); 
+            margin-bottom: 8px; 
+        }
+        .city-type { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 500; }
+        .city-type.primary { background: white; color: black; }
+        .city-type.admin { background: #28a745; color: white; }
+        .city-type.major { background: #ffc107; color: black; }
+        .city-type.minor { background: #6c757d; color: white; }
+        
+        @media (max-width: 1200px) {
+            .cities-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        
+        @media (max-width: 768px) {
+            .header { text-align: center; }
+            .country-name { font-size: 28px; }
+            .cities-grid { grid-template-columns: repeat(2, 1fr); }
+            .search-input { width: 250px; }
+        }
+        
+        @media (max-width: 480px) {
+            .cities-grid { grid-template-columns: 1fr; }
+            .search-input { width: 200px; }
+            .back-btn { 
+                position: relative; 
+                top: auto; 
+                left: auto; 
+                margin-bottom: 20px; 
+                display: block;
+                width: fit-content;
+            }
+            .search-container {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+            .search-input { width: 100%; max-width: 300px; }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="window.location.href='index.html'" data-i18n="country.page.back">← Haritaya Dön</button>
+    <div class="container">
+        <div id="loading" class="loading" data-i18n="country.page.loading">
+            Sayfa yükleniyor...
+        </div>
+        <div id="content" style="display: none;">
+            <div class="header">
+                <div class="flag" id="countryFlag"></div>
+                <div class="country-name" id="countryName"></div>
+                <div class="country-population" id="countryPopulation"></div>
+            </div>
+
+            <!-- Arama kutusu sağ üstte -->
+            <div class="search-container">
+                <input type="text" id="citySearchInput" class="search-input" data-i18n-placeholder="country.page.search" placeholder="Şehir ara...">
+            </div>
+
+            <div class="cities-section">
+                <div class="section-header">
+                    <div class="section-title" id="sectionTitle" data-i18n=""></div>
+                </div>
+                <div class="cities-grid" id="citiesGrid">
+                    <!-- JavaScript ile doldurulacak -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sayfa yüklendiğinde verileri al
+        window.addEventListener('load', function() {
+            loadCountryData();
+        });
+
+        function loadCountryData() {
+            try {
+                const storedData = localStorage.getItem('countryPageData');
+                if (!storedData) {
+                    document.getElementById('loading').innerHTML = 'Veri bulunamadı. Ana sayfaya dönülüyor...';
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 2000);
+                    return;
+                }
+
+                const data = JSON.parse(storedData);
+                
+                // Dinamik arka plan ayarla
+                setCountryBackground(data.name);
+                
+                // Sayfa verilerini doldur
+                const flagElement = document.getElementById('countryFlag');
+                const nameElement = document.getElementById('countryName');
+                const populationElement = document.getElementById('countryPopulation');
+                const titleElement = document.getElementById('sectionTitle');
+                
+                if (flagElement) flagElement.textContent = data.flag || '';
+                if (nameElement) nameElement.textContent = data.name + (data.iso2 ? ` (${data.iso2})` : '');
+                // Nüfus metni çeviri sistemi ile güncellencek
+                updatePopulationText(populationElement, data.population);
+                // Section title çevirisi i18n sistem tarafından yapılacak, dinamik ülke ismi eklenmeyecek
+                
+                document.title = `${data.name} - Globe Explorer`;
+
+                // Şehirleri oluştur
+                const citiesGrid = document.getElementById('citiesGrid');
+                citiesGrid.innerHTML = '';
+
+                if (data.cities && data.cities.length > 0) {
+                    data.cities.forEach(city => {
+                        const cityCard = createCityCard(city, data.name);
+                        citiesGrid.appendChild(cityCard);
+                    });
+                } else {
+                    const noDataText = window.i18n ? window.i18n.t('country.page.no.data', 'Bu ülke için şehir verisi bulunamadı.') : 'Bu ülke için şehir verisi bulunamadı.';
+                    citiesGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">${noDataText}</div>`;
+                }
+
+                // Loading'i gizle, içeriği göster
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+
+                // Arama fonksiyonunu başlat
+                setupSearch();
+
+            } catch (error) {
+                console.error('Veri yükleme hatası:', error);
+                document.getElementById('loading').innerHTML = 'Veri yükleme hatası. Ana sayfaya dönülüyor...';
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+            }
+        }
+
+        function createCityCard(city, countryName) {
+            const card = document.createElement('div');
+            card.className = 'city-card';
+            card.setAttribute('data-city-name', (city.city || city.name).toLowerCase());
+            
+            card.innerHTML = `
+                <div class="city-header">
+                    <div class="city-name">${city.city || city.name}</div>
+                    <div class="city-population">${formatPop(city.population)}</div>
+                </div>
+                <div class="city-info">${city.admin_name || city.country}</div>
+                ${(city.capital === 'primary') ? '<div class="city-type primary" data-i18n="country.page.capital">Başkent</div>' : ''}
+            `;
+
+            // Şehir kartına tıklama olayı ekle
+            card.addEventListener('click', function() {
+                openCityDetail(city.city || city.name, countryName, city.lat || 0, city.lng || 0);
+            });
+
+            return card;
+        }
+
+        function openCityDetail(cityName, countryName, lat, lng) {
+            console.log('🏙️ Opening city detail:', cityName, 'in', countryName);
+            
+            // ABD için özel durum: Bu aslında eyalet adı, eyalet sayfasına git
+            if (countryName === 'United States' || countryName === 'Amerika Birleşik Devletleri') {
+                console.log('🇺🇸 ABD eyaleti seçildi:', cityName);
+                openStateDetailPage(cityName);
+                return;
+            }
+            
+            // Diğer ülkeler için normal şehir detay sayfası
+            const detailUrl = `city-detail.html?city=${encodeURIComponent(cityName)}&country=${encodeURIComponent(countryName)}&lat=${lat}&lng=${lng}`;
+            window.location.href = detailUrl;
+        }
+
+        // ABD eyalet detay sayfasını aç
+        function openStateDetailPage(stateName) {
+            console.log('🏛️ Eyalet detay sayfası açılıyor:', stateName);
+            
+            const params = new URLSearchParams({
+                state: stateName,
+                country: 'United States'
+            });
+            
+            const url = `state-detail.html?${params.toString()}`;
+            window.location.href = url;
+        }
+
+        // Artık kullanılmayan modal fonksiyonu temizlendi
+        
+        // Dinamik arka plan ayarlama fonksiyonu
+        function setCountryBackground(countryName) {
+            // Mevcut modalı temizle
+            const existing = document.getElementById('state-details-modal');
+            if (existing) {
+                existing.remove();
+            }
+
+            // Modal HTML
+            const modal = document.createElement('div');
+            modal.id = 'state-details-modal';
+            modal.innerHTML = `
+                <div class="state-modal-overlay" onclick="closeStateModal()">
+                    <div class="state-modal-content" onclick="event.stopPropagation()">
+                        <div class="state-header">
+                            <h2>${stateName} Eyaleti</h2>
+                            <button class="close-modal-btn" onclick="closeStateModal()">&times;</button>
+                        </div>
+                        <div class="state-body">
+                            <div class="cities-section">
+                                <h3>${stateName} Şehirleri</h3>
+                                <div class="city-search-container">
+                                    <input type="text" id="state-city-search" placeholder="Şehir ara..." 
+                                           oninput="filterStateCities(this.value)" />
+                                </div>
+                                <div id="cities-list-container">
+                                    <div class="loading-cities">Şehirler yükleniyor...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Modal CSS
+            const style = document.createElement('style');
+            style.textContent = `
+                #state-details-modal {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100vw;
+                    height: 100vh;
+                    z-index: 10000;
+                }
+
+                .state-modal-overlay {
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.8);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    backdrop-filter: blur(5px);
+                }
+
+                .state-modal-content {
+                    background: linear-gradient(135deg, rgba(26, 26, 46, 0.95), rgba(15, 20, 25, 0.95));
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 12px;
+                    width: 90vw;
+                    max-width: 800px;
+                    max-height: 85vh;
+                    display: flex;
+                    flex-direction: column;
+                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+                }
+
+                .state-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 20px 25px 15px;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                }
+
+                .state-header h2 {
+                    color: white;
+                    font-size: 24px;
+                    margin: 0;
+                    font-weight: 600;
+                }
+
+                .close-modal-btn {
+                    background: none;
+                    border: none;
+                    color: #ccc;
+                    font-size: 28px;
+                    cursor: pointer;
+                    padding: 0;
+                    width: 32px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 4px;
+                    transition: all 0.2s ease;
+                }
+
+                .close-modal-btn:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                    color: white;
+                }
+
+                .state-body {
+                    padding: 20px 25px;
+                    flex: 1;
+                    overflow: hidden;
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .cities-section h3 {
+                    color: white;
+                    font-size: 18px;
+                    margin: 0 0 15px 0;
+                    font-weight: 500;
+                }
+
+                .city-search-container {
+                    margin-bottom: 15px;
+                }
+
+                #state-city-search {
+                    width: 100%;
+                    padding: 10px 15px;
+                    background: rgba(255, 255, 255, 0.1);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    border-radius: 6px;
+                    color: white;
+                    font-size: 14px;
+                    box-sizing: border-box;
+                }
+
+                #state-city-search::placeholder {
+                    color: rgba(255, 255, 255, 0.5);
+                }
+
+                #state-city-search:focus {
+                    outline: none;
+                    border-color: rgba(64, 150, 255, 0.6);
+                    background: rgba(255, 255, 255, 0.15);
+                }
+
+                #cities-list-container {
+                    flex: 1;
+                    overflow-y: auto;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 6px;
+                    background: rgba(0, 0, 0, 0.2);
+                }
+
+                .loading-cities {
+                    text-align: center;
+                    padding: 40px 20px;
+                    color: #ccc;
+                    font-style: italic;
+                }
+
+                .cities-list {
+                    padding: 10px;
+                }
+
+                .city-item {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 12px 15px;
+                    margin-bottom: 8px;
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 6px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                }
+
+                .city-item:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                    border-color: rgba(64, 150, 255, 0.4);
+                    transform: translateY(-1px);
+                }
+
+                .city-info-modal {
+                    flex: 1;
+                }
+
+                .city-name-modal {
+                    color: white;
+                    font-weight: 500;
+                    font-size: 15px;
+                    margin-bottom: 3px;
+                }
+
+                .city-meta-modal {
+                    color: #ccc;
+                    font-size: 12px;
+                    opacity: 0.8;
+                }
+
+                .city-action-btn {
+                    background: rgba(64, 150, 255, 0.8);
+                    color: white;
+                    border: none;
+                    padding: 6px 12px;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    white-space: nowrap;
+                }
+
+                .city-action-btn:hover {
+                    background: rgba(64, 150, 255, 1);
+                    transform: scale(1.05);
+                }
+
+                .cities-empty {
+                    text-align: center;
+                    padding: 40px 20px;
+                    color: #999;
+                }
+            `;
+
+            document.head.appendChild(style);
+            document.body.appendChild(modal);
+
+            // ESC tuşu ile kapatma
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeStateModal();
+                }
+            });
+        }
+
+        // Modalı kapat
+        function closeStateModal() {
+            const modal = document.getElementById('state-details-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // Şehirleri modal içinde göster
+        function renderCitiesInModal(cities, stateName) {
+            const container = document.getElementById('cities-list-container');
+            if (!container) return;
+
+            // Global değişken olarak sakla (arama için)
+            window.currentStateCities = cities;
+
+            if (cities.length === 0) {
+                container.innerHTML = `<div class="cities-empty">${stateName} eyaletinde şehir bulunamadı.</div>`;
+                return;
+            }
+
+            const citiesHTML = cities.map(city => `
+                <div class="city-item" onclick="openCityAirQuality('${city.name}', '${stateName}')">
+                    <div class="city-info-modal">
+                        <div class="city-name-modal">${escapeHtml(city.name)}</div>
+                        <div class="city-meta-modal">
+                            ${city.population ? `Nüfus: ${formatPopulation(city.population)} • ` : ''}
+                            ${city.lat.toFixed(4)}, ${city.lng.toFixed(4)}
+                        </div>
+                    </div>
+                    <button class="city-action-btn" onclick="event.stopPropagation(); openCityAirQuality('${city.name}', '${stateName}')">
+                        Hava Kalitesi
+                    </button>
+                </div>
+            `).join('');
+
+            container.innerHTML = `<div class="cities-list">${citiesHTML}</div>`;
+        }
+
+        // Şehirleri filtrele (arama)
+        function filterStateCities(query) {
+            if (!window.currentStateCities) return;
+
+            const filtered = query.trim() 
+                ? window.currentStateCities.filter(city => 
+                    city.name.toLowerCase().includes(query.toLowerCase())
+                )
+                : window.currentStateCities;
+
+            const container = document.getElementById('cities-list-container');
+            if (!container) return;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="cities-empty">"${query}" için şehir bulunamadı.</div>`;
+                return;
+            }
+
+            const citiesHTML = filtered.map(city => `
+                <div class="city-item" onclick="openCityAirQuality('${city.name}', '${city.admin_name}')">
+                    <div class="city-info-modal">
+                        <div class="city-name-modal">${escapeHtml(city.name)}</div>
+                        <div class="city-meta-modal">
+                            ${city.population ? `Nüfus: ${formatPopulation(city.population)} • ` : ''}
+                            ${city.lat.toFixed(4)}, ${city.lng.toFixed(4)}
+                        </div>
+                    </div>
+                    <button class="city-action-btn" onclick="event.stopPropagation(); openCityAirQuality('${city.name}', '${city.admin_name}')">
+                        Hava Kalitesi
+                    </button>
+                </div>
+            `).join('');
+
+            container.innerHTML = `<div class="cities-list">${citiesHTML}</div>`;
+        }
+
+        // Şehir hava kalitesi sayfası aç
+        function openCityAirQuality(cityName, stateName) {
+            console.log('🌬️ Hava kalitesi açılıyor:', cityName, 'eyalet:', stateName);
+            closeStateModal();
+            
+            const params = new URLSearchParams({
+                city: cityName,
+                state: stateName,
+                country: 'United States'
+            });
+            
+            const url = `city-detail.html?${params.toString()}`;
+            window.open(url, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+        }
+
+        // Yardımcı fonksiyonlar
+        function formatPopulation(pop) {
+            if (pop >= 1000000) {
+                return `${(pop / 1000000).toFixed(1)}M`;
+            } else if (pop >= 1000) {
+                return `${(pop / 1000).toFixed(0)}K`;
+            }
+            return pop.toString();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showStateError(stateName, message) {
+            const container = document.getElementById('cities-list-container');
+            if (container) {
+                container.innerHTML = `
+                    <div class="cities-empty">
+                        <div style="color: #f44336; margin-bottom: 10px;">${message}</div>
+                        <button onclick="openUSStateDetails('${stateName}')" style="background: rgba(244, 67, 54, 0.8); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+                            Tekrar Dene
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function formatPop(pop) {
+            if (!pop || pop === '0') return 'N/A';
+            const num = parseInt(pop);
+            if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+            if (num >= 1000) return `${(num / 1000).toFixed(0)}K`;
+            return num.toLocaleString();
+        }
+
+        // Dinamik arka plan ayarlama fonksiyonu
+        function setCountryBackground(countryName) {
+            const body = document.body;
+            
+            // Önceki arka plan sınıflarını temizle
+            body.removeAttribute('data-country');
+            
+            // Ülke ismini normalleştir ve arka plan ayarla
+            const normalizedCountryName = normalizeCountryName(countryName);
+            body.setAttribute('data-country', normalizedCountryName);
+            
+            console.log(`🎨 Arka plan ayarlandı: ${normalizedCountryName}`);
+        }
+
+        // Ülke isimlerini normalleştir
+        function normalizeCountryName(countryName) {
+            const countryMap = {
+                'Türkiye': 'Turkey',
+                'Amerika Birleşik Devletleri': 'United States',
+                'ABD': 'United States',
+                'Amerika': 'United States',
+                'United States of America': 'United States',
+                'Kanada': 'Canada',
+                'Meksika': 'Mexico',
+                'Almanya': 'Germany',
+                'Fransa': 'France',
+                'İngiltere': 'United Kingdom',
+                'Birleşik Krallık': 'United Kingdom',
+                'Japonya': 'Japan',
+                'Çin': 'China',
+                'Rusya': 'Russia',
+                'Brezilya': 'Brazil',
+                'Avustralya': 'Australia',
+                'Hindistan': 'India',
+                'Güney Kore': 'South Korea',
+                'İtalya': 'Italy',
+                'İspanya': 'Spain'
+            };
+            
+            return countryMap[countryName] || countryName;
+        }
+
+        function setupSearch() {
+            const searchInput = document.getElementById('citySearchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', filterCities);
+                
+                searchInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        this.value = '';
+                        filterCities();
+                    }
+                });
+            }
+        }
+
+        function filterCities() {
+            const searchTerm = document.getElementById('citySearchInput').value.toLowerCase().trim();
+            const cityCards = document.querySelectorAll('.city-card');
+            
+            if (searchTerm === '') {
+                cityCards.forEach(card => {
+                    card.style.display = '';
+                    card.style.order = '';
+                });
+                return;
+            }
+
+            const startsWithCities = [];
+            const containsCities = [];
+
+            cityCards.forEach((card, index) => {
+                const cityName = card.getAttribute('data-city-name');
+                
+                if (cityName.startsWith(searchTerm)) {
+                    startsWithCities.push({ card, index });
+                } else if (cityName.includes(searchTerm)) {
+                    containsCities.push({ card, index });
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            const allMatches = [...startsWithCities, ...containsCities];
+            allMatches.forEach(({ card }, displayIndex) => {
+                card.style.display = '';
+                card.style.order = displayIndex;
+            });
+        }
+    </script>
+
+    <!-- i18n ve Translator dosyalarını dahil et -->
+    <script src="js/i18n-core.js"></script>
+    <script src="js/translator.js"></script>
+    
+    <script>
+        // Çeviri sistemini başlat
+        let i18n, translator;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Global i18n nesnesini kullan (eğer yoksa yeni oluştur)
+            i18n = window.i18n || new I18nCore();
+            translator = window.translator || new Translator();
+            
+            // Eğer yeni oluşturulduysa global olarak ata
+            if (!window.i18n) {
+                window.i18n = i18n;
+                window.translator = translator;
+            }
+            
+            // Sayfayı çevir
+            translatePage();
+            
+            // Dil değişikliklerini dinle
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'preferredLanguage') {
+                    console.log(`🔄 Country page: Language changed to ${e.newValue}`);
+                    i18n.setLang(e.newValue);
+                    translatePage();
+                }
+            });
+            
+            // Polling ile localStorage kontrolü
+            let lastLang = i18n.getLang();
+            setInterval(() => {
+                const currentLang = localStorage.getItem('preferredLanguage') || 'en';
+                if (currentLang !== lastLang) {
+                    console.log(`🔄 Country page polling: ${lastLang} -> ${currentLang}`);
+                    lastLang = currentLang;
+                    i18n.setLang(currentLang);
+                    translatePage();
+                }
+            }, 1000);
+        });
+        
+        function translatePage() {
+            if (!i18n) return;
+            
+            const currentLang = i18n.getLang();
+            console.log(`🌐 Country page translating to: ${currentLang}`);
+            
+            // data-i18n attribute'ları olan elementleri çevir
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                const translation = i18n.t(key);
+                if (translation && translation !== key) {
+                    element.textContent = translation;
+                }
+            });
+            
+            // data-i18n-placeholder attribute'ları olan elementleri çevir
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+                const key = element.getAttribute('data-i18n-placeholder');
+                const translation = i18n.t(key);
+                if (translation && translation !== key) {
+                    element.placeholder = translation;
+                }
+            });
+            
+            // Dinamik şehir kartlarındaki çevirileri güncelle
+            setTimeout(() => {
+                translateDynamicElements();
+            }, 100);
+        }
+        
+        function translateDynamicElements() {
+            // Başkent etiketlerini çevir
+            document.querySelectorAll('[data-i18n="country.page.capital"]').forEach(element => {
+                const translation = i18n.t('country.page.capital');
+                if (translation && translation !== 'country.page.capital') {
+                    element.textContent = translation;
+                }
+            });
+            
+            // Nüfus metnini çevir
+            const populationElement = document.getElementById('countryPopulation');
+            if (populationElement && populationElement.dataset.population) {
+                updatePopulationText(populationElement, populationElement.dataset.population);
+            }
+        }
+        
+        function updatePopulationText(element, population) {
+            if (!element || !i18n) return;
+            
+            // Nüfus verisini element'e kaydet
+            element.dataset.population = population;
+            
+            // Çeviriyi al ve metni güncelle
+            const populationLabel = i18n.t('country.meta.population', 'Nüfus');
+            element.textContent = `${populationLabel}: ${formatPop(population)}`;
+        }
+    </script>
+</body>
+</html>

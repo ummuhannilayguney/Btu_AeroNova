@@ -1,0 +1,688 @@
+<!DOCTYP        body {
+            height: 100vh;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: white; 
+            overflow: hidden;
+        }
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Şehir Detay Sayfası</title>
+    <style>
+        /* Temel sayfa ayarı */
+        html, body {
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: white; 
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        /* Arka plan - şehir seçme sayfası ile aynı */
+        .bg-container {
+            background: 
+                linear-gradient(rgba(26, 26, 46, 0.7), rgba(15, 20, 25, 0.8)),
+                url('images/city_background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 100vh;
+            width: 100vw;
+            background-attachment: fixed;
+            overflow: hidden;
+        }
+
+        /* Ana içerik overlay */
+        .overlay {
+            background-color: transparent;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            padding: 40px 20px;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        /* Şehir ismi - ortada */
+        .city-name {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            font-size: 2em;
+            font-weight: 600;
+            text-shadow: 2px 2px 4px #000000;
+            margin: 0;
+            color: white;
+            text-align: center;
+        }
+
+        /* Şehir konumu - şehir isminin altında */
+        .city-location {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            font-size: 1.1em;
+            font-weight: 400;
+            text-shadow: 1px 1px 3px #000000;
+            margin: 0;
+            color: rgba(255, 255, 255, 0.85);
+            text-align: center;
+        }
+
+        /* Geri dön butonu - sol üst */
+        .city-header {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            z-index: 1000;
+        }
+
+        .back-to-city-btn {
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            text-decoration: none;
+            padding: 12px 20px;
+            border: 2px solid white;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: fit-content;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+        }
+
+        .back-to-city-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+
+
+        /* Ana içerik alanı */
+        .main-content {
+            margin-top: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 20px;
+            height: calc(100vh - 100px);
+            overflow: hidden;
+        }
+
+
+
+        /* Haftalık tablo */
+        .weekly-table {
+            width: 95%;
+            max-width: 1200px;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .weekly-table th {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px 15px;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #ffffff;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .weekly-table td {
+            padding: 18px 15px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 1em;
+            color: white;
+        }
+
+        .weekly-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* AQI renk kodlaması */
+        .aqi-good { 
+            color: white; 
+            font-weight: bold; 
+            text-shadow: 0 0 3px #4CAF50, 0 1px 2px rgba(76, 175, 80, 0.4);
+        }
+        .aqi-moderate { 
+            color: white; 
+            font-weight: bold; 
+            text-shadow: 0 0 3px #FFC107, 0 1px 2px rgba(255, 193, 7, 0.4);
+        }
+        .aqi-unhealthy { 
+            color: white; 
+            font-weight: bold; 
+            text-shadow: 0 0 3px #FF9800, 0 1px 2px rgba(255, 152, 0, 0.4);
+        }
+        .aqi-very-unhealthy { 
+            color: white; 
+            font-weight: bold; 
+            text-shadow: 0 0 3px #F44336, 0 1px 2px rgba(244, 67, 54, 0.4);
+        }
+        .aqi-hazardous { 
+            color: white; 
+            font-weight: bold; 
+            text-shadow: 0 0 3px #9C27B0, 0 1px 2px rgba(156, 39, 176, 0.4);
+        }
+
+        /* Sıcaklık renk kodlaması */
+        .temp-cold { color: white; }
+        .temp-mild { color: white; }
+        .temp-warm { color: white; }
+        .temp-hot { color: white; }
+
+
+
+        /* Responsive tasarım */
+        @media (max-width: 768px) {
+            .city-header {
+                position: relative;
+                top: auto;
+                left: auto;
+                margin: 10px 0;
+                text-align: center;
+                align-items: center;
+            }
+            
+            .datetime-container {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin: 10px 0;
+                text-align: center;
+            }
+
+            .main-content {
+                margin-top: 20px;
+            }
+
+            .weekly-table {
+                font-size: 0.9em;
+            }
+
+            .back-to-city-btn {
+                font-size: 0.8em;
+                padding: 6px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-container">
+        <div class="overlay">
+        <!-- Şehir ismi - ortada -->
+        <h1 class="city-name" id="cityName">Loading...</h1>
+        <p class="city-location" id="countryName">Loading...</p>
+        
+        <!-- Geri dön butonu - sol üst -->
+        <div class="city-header">
+            <a href="javascript:history.back()" class="back-to-city-btn" id="backToCityBtn">
+                ← <span data-i18n="back.to.city">Şehir Listesine Geri Dön</span>
+            </a>
+        </div>
+
+            <!-- Ana içerik -->
+            <div class="main-content">
+                <!-- Birleştirilmiş Tablo -->
+                <table class="weekly-table" id="combinedTable">
+                    <thead>
+                        <tr>
+                            <th data-i18n="table.date">Tarih</th>
+                            <th data-i18n="table.day">Gün</th>
+                            <th data-i18n="table.main.pollutant">Ana Kirletici</th>
+                            <th data-i18n="table.aqi.value">AQI Değeri</th>
+                            <th data-i18n="table.air.quality">Hava Kalitesi</th>
+                            <th data-i18n="table.humidity">Nem (%)</th>
+                            <th data-i18n="table.temperature">Sıcaklık (°C)</th>
+                            <th data-i18n="table.weather.condition">Hava Durumu</th>
+                        </tr>
+                    </thead>
+                    <tbody id="combinedTableBody">
+                        <!-- JavaScript ile doldurulacak -->
+                    </tbody>
+                </table>
+            </div>
+
+
+        </div>
+    </div>
+
+    <!-- Çeviri sistem dosyalarını ekle -->
+    <script src="js/i18n-core.js" onerror="console.warn('i18n-core.js not found')"></script>
+    <script src="js/translator.js" onerror="console.warn('translator.js not found')"></script>
+    
+    <script>
+        // Çeviri sistemi başlat
+        let translator;
+        
+        // Çeviri metinleri
+        const translations = {
+            'tr': {
+                'back.to.city': 'Şehir Listesi',
+                'tab.aqi': 'AQI Verisi',
+                'tab.weather': 'Sıcaklık & Nem',
+                'table.day': 'Gün',
+                'table.date': 'Tarih',
+                'table.aqi.value': 'AQI Değeri',
+                'table.air.quality': 'Hava Kalitesi',
+                'table.main.pollutant': 'Ana Kirletici',
+                'table.temperature': 'Sıcaklık (°C)',
+                'table.humidity': 'Nem (%)',
+                'table.weather.condition': 'Hava Durumu',
+                'aqi.good': 'İyi',
+                'aqi.moderate': 'Orta',
+                'aqi.unhealthy.sensitive': 'Hassas Gruplar İçin Sağlıksız',
+                'aqi.unhealthy': 'Sağlıksız',
+                'aqi.hazardous': 'Tehlikeli',
+                'day.monday': 'Pazartesi',
+                'day.tuesday': 'Salı',
+                'day.wednesday': 'Çarşamba',
+                'day.thursday': 'Perşembe',
+                'day.friday': 'Cuma',
+                'day.saturday': 'Cumartesi',
+                'day.sunday': 'Pazar',
+                'weather.sunny': 'Güneşli',
+                'weather.cloudy': 'Bulutlu',
+                'weather.partly.cloudy': 'Parçalı Bulutlu',
+                'weather.rainy': 'Yağmurlu',
+                'weather.snowy': 'Karlı',
+                'weather.foggy': 'Sisli',
+                'loading.text': 'Veriler yükleniyor...',
+                'error.text': 'Veri yüklenirken hata oluştu. Örnek veriler gösteriliyor.',
+                'page.title.suffix': 'Hava Kalitesi ve Hava Durumu'
+            },
+            'en': {
+                'back.to.city': 'City List',
+                'tab.aqi': 'AQI Data',
+                'tab.weather': 'Temperature & Humidity',
+                'table.day': 'Day',
+                'table.date': 'Date',
+                'table.aqi.value': 'AQI Value',
+                'table.air.quality': 'Air Quality',
+                'table.main.pollutant': 'Main Pollutant',
+                'table.temperature': 'Temperature (°C)',
+                'table.humidity': 'Humidity (%)',
+                'table.weather.condition': 'Weather Condition',
+                'aqi.good': 'Good',
+                'aqi.moderate': 'Moderate',
+                'aqi.unhealthy.sensitive': 'Unhealthy for Sensitive Groups',
+                'aqi.unhealthy': 'Unhealthy',
+                'aqi.hazardous': 'Hazardous',
+                'day.monday': 'Monday',
+                'day.tuesday': 'Tuesday',
+                'day.wednesday': 'Wednesday',
+                'day.thursday': 'Thursday',
+                'day.friday': 'Friday',
+                'day.saturday': 'Saturday',
+                'day.sunday': 'Sunday',
+                'weather.sunny': 'Sunny',
+                'weather.cloudy': 'Cloudy',
+                'weather.partly.cloudy': 'Partly Cloudy',
+                'weather.rainy': 'Rainy',
+                'weather.snowy': 'Snowy',
+                'weather.foggy': 'Foggy',
+                'loading.text': 'Loading data...',
+                'error.text': 'Error loading data. Showing sample data.',
+                'page.title.suffix': 'Air Quality and Weather'
+            }
+        };
+
+        // URL parametrelerinden şehir bilgilerini al
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                city: params.get('city') || 'Unknown City',
+                state: params.get('state') || '',
+                country: params.get('country') || 'Unknown Country',
+                lat: params.get('lat') || '0',
+                lng: params.get('lng') || '0'
+            };
+        }
+
+        // Çeviri fonksiyonu
+        function t(key, fallback) {
+            const currentLang = getCurrentLanguage();
+            const translation = translations[currentLang]?.[key];
+            
+            if (translation) {
+                return translation;
+            }
+            
+            // Fallback olarak İngilizce dene
+            if (currentLang !== 'en' && translations['en']?.[key]) {
+                return translations['en'][key];
+            }
+            
+            // Son olarak fallback veya key'i döndür
+            return fallback || key;
+        }
+
+        // Mevcut dili al - ana projeden veya localStorage'dan
+        function getCurrentLanguage() {
+            // Ana projeden dil bilgisini almaya çalış
+            if (window.parent && window.parent.i18n && window.parent.i18n.currentLanguage) {
+                return window.parent.i18n.currentLanguage;
+            }
+            
+            // localStorage'dan al
+            const storedLang = localStorage.getItem('selectedLanguage');
+            if (storedLang) {
+                return storedLang;
+            }
+            
+            // URL parametresinden al
+            const urlParams = new URLSearchParams(window.location.search);
+            const langParam = urlParams.get('lang');
+            if (langParam) {
+                return langParam;
+            }
+            
+            // Varsayılan
+            return 'tr';
+        }
+
+        // Sayfayı çevir
+        function translatePage() {
+            const currentLang = getCurrentLanguage();
+            console.log('Current language:', currentLang);
+            
+            const elements = document.querySelectorAll('[data-i18n]');
+            elements.forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                const translation = t(key, element.textContent);
+                element.textContent = translation;
+                console.log(`Translated ${key}: ${translation}`);
+            });
+            
+            // Sayfa başlığını güncelle
+            const params = getUrlParams();
+            const cityName = params.city;
+            document.title = `${cityName} - ${t('page.title.suffix', 'Hava Kalitesi ve Hava Durumu')}`;
+        }
+
+        // Dil değişikliğini dinle
+        function listenForLanguageChanges() {
+            // localStorage değişikliklerini dinle
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'selectedLanguage') {
+                    console.log('Language changed to:', e.newValue);
+                    translatePage();
+                    // Tabloları yeniden oluştur
+                    const params = getUrlParams();
+                    loadCityData(params.city, params.country);
+                }
+            });
+            
+            // Periyodik kontrol (ana sayfadan dil değişikliği için)
+            setInterval(() => {
+                const currentDisplayLang = document.documentElement.lang || 'tr';
+                const actualLang = getCurrentLanguage();
+                if (currentDisplayLang !== actualLang) {
+                    document.documentElement.lang = actualLang;
+                    translatePage();
+                    // Tabloları yeniden oluştur
+                    const params = getUrlParams();
+                    loadCityData(params.city, params.country);
+                }
+            }, 1000);
+        }
+
+        // Sayfa başlığını ve şehir ismini ayarla
+        function initializePage() {
+            const params = getUrlParams();
+            const cityName = params.city;
+            const stateName = params.state;
+            const countryName = params.country;
+            
+            console.log('Initializing page with language:', getCurrentLanguage());
+            console.log(`📍 Loading data for: ${cityName}${stateName ? ', ' + stateName : ''}, ${countryName}`);
+            
+            // HTML lang attribute'unu ayarla
+            document.documentElement.lang = getCurrentLanguage();
+            
+            // Çeviri sistemini başlat
+            translatePage();
+            
+            // Dil değişiklik dinleyicisini başlat
+            listenForLanguageChanges();
+            
+            // Update city name display - include state if available
+            const cityElement = document.getElementById('cityName');
+            if (cityElement) {
+                cityElement.textContent = cityName;
+            }
+            
+            // Update country display - include state if available  
+            const countryElement = document.getElementById('countryName');
+            if (countryElement) {
+                const displayLocation = stateName ? `${stateName}, ${countryName}` : countryName;
+                countryElement.textContent = displayLocation;
+            }
+            
+            // Update page title
+            document.getElementById('page-title').textContent = `${cityName} - ${t('page.title.suffix', 'Hava Kalitesi ve Hava Durumu')}`;
+            
+            // Verileri yükle
+            loadCityData(cityName, countryName);
+        }
+
+
+
+        // AQI değerine göre renk sınıfı döndür
+        function getAQIClass(aqi) {
+            if (aqi <= 50) return 'aqi-good';
+            if (aqi <= 100) return 'aqi-moderate';
+            if (aqi <= 150) return 'aqi-unhealthy';
+            if (aqi <= 200) return 'aqi-very-unhealthy';
+            return 'aqi-hazardous';
+        }
+
+        // AQI değerine göre durum metni döndür
+        function getAQIStatus(aqi) {
+            if (aqi <= 50) return t('aqi.good', 'İyi');
+            if (aqi <= 100) return t('aqi.moderate', 'Orta');
+            if (aqi <= 150) return t('aqi.unhealthy.sensitive', 'Hassas Gruplar İçin Sağlıksız');
+            if (aqi <= 200) return t('aqi.unhealthy', 'Sağlıksız');
+            return t('aqi.hazardous', 'Tehlikeli');
+        }
+
+        // Sıcaklığa göre renk sınıfı döndür
+        function getTempClass(temp) {
+            if (temp < 10) return 'temp-cold';
+            if (temp < 20) return 'temp-mild';
+            if (temp < 30) return 'temp-warm';
+            return 'temp-hot';
+        }
+
+        // Şehir verilerini yükle
+        async function loadCityData(cityName, countryName) {
+            try {
+                // Loading durumunu göster
+                showLoadingState();
+                
+                // Gerçek API verilerini almaya çalış (bu bölümü kendi API'nızla değiştirebilirsiniz)
+                // Şimdilik örnek veriler kullanıyoruz
+                const aqiData = await fetchAQIData(cityName, countryName);
+                const weatherData = await fetchWeatherData(cityName, countryName);
+                
+                // Birleştirilmiş tabloyu doldur
+                populateCombinedTable(aqiData, weatherData);
+                
+            } catch (error) {
+                console.error('Veri yükleme hatası:', error);
+                showErrorState();
+            }
+        }
+
+        // Loading durumunu göster
+        function showLoadingState() {
+            const combinedTableBody = document.getElementById('combinedTableBody');
+            const loadingText = t('loading.text', 'Veriler yükleniyor...');
+            combinedTableBody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;">${loadingText}</td></tr>`;
+        }
+
+        // Hata durumunu göster
+        function showErrorState() {
+            const combinedTableBody = document.getElementById('combinedTableBody');
+            const errorText = t('error.text', 'Veri yüklenirken hata oluştu. Örnek veriler gösteriliyor.');
+            combinedTableBody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:#F44336;">${errorText}</td></tr>`;
+            
+            // Hata durumunda örnek verileri göster
+            setTimeout(() => {
+                const aqiData = generateWeeklyAQIData();
+                const weatherData = generateWeeklyWeatherData();
+                populateAQITable(aqiData);
+                populateWeatherTable(weatherData);
+            }, 2000);
+        }
+
+        // AQI verilerini fetch et (örnek - gerçek API ile değiştirilebilir)
+        async function fetchAQIData(cityName, countryName) {
+            // Burada gerçek bir AQI API'si kullanabilirsiniz
+            // Örnek: OpenWeatherMap Air Pollution API, WAQI API vb.
+            
+            // Simüle edilmiş API çağrısı
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            return generateWeeklyAQIData();
+        }
+
+        // Hava durumu verilerini fetch et (örnek - gerçek API ile değiştirilebilir)
+        async function fetchWeatherData(cityName, countryName) {
+            // Burada gerçek bir hava durumu API'si kullanabilirsiniz
+            // Örnek: OpenWeatherMap Weather API, AccuWeather API vb.
+            
+            // Simüle edilmiş API çağrısı
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            return generateWeeklyWeatherData();
+        }
+
+        // Birleştirilmiş tabloyu doldur
+        function populateCombinedTable(aqiData, weatherData) {
+            const combinedTableBody = document.getElementById('combinedTableBody');
+            combinedTableBody.innerHTML = '';
+            
+            for (let i = 0; i < Math.max(aqiData.length, weatherData.length); i++) {
+                const row = document.createElement('tr');
+                const aqiDay = aqiData[i] || {};
+                const weatherDay = weatherData[i] || {};
+                
+                const aqiClass = aqiDay.aqi ? getAQIClass(aqiDay.aqi) : '';
+                const aqiStatus = aqiDay.aqi ? getAQIStatus(aqiDay.aqi) : '';
+                const tempClass = weatherDay.temp ? getTempClass(weatherDay.temp) : '';
+                
+                row.innerHTML = `
+                    <td>${aqiDay.date || weatherDay.date || ''}</td>
+                    <td><strong>${aqiDay.dayName || weatherDay.dayName || ''}</strong></td>
+                    <td>${aqiDay.pollutant || '-'}</td>
+                    <td><span class="${aqiClass}">${aqiDay.aqi || '-'}</span></td>
+                    <td><span class="${aqiClass}">${aqiStatus || '-'}</span></td>
+                    <td>${weatherDay.humidity ? weatherDay.humidity + '%' : '-'}</td>
+                    <td><span class="${tempClass}">${weatherDay.temp ? weatherDay.temp + '°C' : '-'}</span></td>
+                    <td>${weatherDay.condition || '-'}</td>
+                `;
+                combinedTableBody.appendChild(row);
+            }
+        }
+
+        // Haftalık AQI verisi oluştur (örnek)
+        function generateWeeklyAQIData() {
+            const dayKeys = ['day.monday', 'day.tuesday', 'day.wednesday', 'day.thursday', 'day.friday', 'day.saturday', 'day.sunday'];
+            const pollutants = ['PM2.5', 'PM10', 'O3', 'NO2', 'SO2'];
+            const data = [];
+            
+            const today = new Date();
+            const currentLang = getCurrentLanguage();
+            
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() + i);
+                
+                const aqi = Math.floor(Math.random() * 150) + 20; // 20-170 arası
+                const pollutant = pollutants[Math.floor(Math.random() * pollutants.length)];
+                
+                const dayIndex = date.getDay() === 0 ? 6 : date.getDay() - 1;
+                
+                data.push({
+                    dayName: t(dayKeys[dayIndex], dayKeys[dayIndex]),
+                    date: date.toLocaleDateString(currentLang === 'tr' ? 'tr-TR' : 'en-US'),
+                    aqi: aqi,
+                    pollutant: pollutant
+                });
+            }
+            
+            return data;
+        }
+
+        // Haftalık hava durumu verisi oluştur (örnek)
+        function generateWeeklyWeatherData() {
+            const dayKeys = ['day.monday', 'day.tuesday', 'day.wednesday', 'day.thursday', 'day.friday', 'day.saturday', 'day.sunday'];
+            const conditionKeys = ['weather.sunny', 'weather.partly.cloudy', 'weather.cloudy', 'weather.rainy', 'weather.snowy', 'weather.foggy'];
+            const data = [];
+            
+            const today = new Date();
+            const currentLang = getCurrentLanguage();
+            
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() + i);
+                
+                const temp = Math.floor(Math.random() * 30) + 5; // 5-35°C arası
+                const humidity = Math.floor(Math.random() * 60) + 30; // 30-90% arası
+                const conditionKey = conditionKeys[Math.floor(Math.random() * conditionKeys.length)];
+                
+                const dayIndex = date.getDay() === 0 ? 6 : date.getDay() - 1;
+                
+                data.push({
+                    dayName: t(dayKeys[dayIndex], dayKeys[dayIndex]),
+                    date: date.toLocaleDateString(currentLang === 'tr' ? 'tr-TR' : 'en-US'),
+                    temp: temp,
+                    humidity: humidity,
+                    condition: t(conditionKey, conditionKey)
+                });
+            }
+            
+            return data;
+        }
+
+        // Dil değiştirme fonksiyonu
+        function switchLanguage(lang) {
+            console.log('Switching language to:', lang);
+            localStorage.setItem('selectedLanguage', lang);
+            document.documentElement.lang = lang;
+            
+            // Sayfayı yeniden çevir
+            translatePage();
+            
+            // Tabloları yeniden oluştur
+            const params = getUrlParams();
+            loadCityData(params.city, params.country);
+        }
+
+        // Sayfa yüklendiğinde başlat
+        window.addEventListener('load', initializePage);
+    </script>
+</body>
+</html>

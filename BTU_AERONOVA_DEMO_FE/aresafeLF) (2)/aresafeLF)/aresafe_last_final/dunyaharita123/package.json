@@ -1,0 +1,17 @@
+{
+  "name": "dunyaharita-globe",
+  "version": "1.0.0",
+  "description": "3D Globe Explorer with Air Pollution Visualization",
+  "scripts": {
+    "build:cities": "node scripts/build-cities.js",
+    "serve": "python -m http.server 8000"
+  },
+  "dependencies": {
+    "topojson-server": "^3.0.1",
+    "topojson-simplify": "^3.0.3"
+  },
+  "devDependencies": {},
+  "keywords": ["globe", "3d", "visualization", "air-pollution", "topojson"],
+  "author": "",
+  "license": "MIT"
+}

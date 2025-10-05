@@ -1,0 +1,1511 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="app.title">Global City Explorer - 3D World</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: radial-gradient(ellipse at center, #0a0a0a 0%, #050508 25%, #020202 50%, #000000 100%);
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+        }
+
+        /* Dinamik arka plan sistemi kaldırıldı - sadece yıldız arka planı */
+
+        /* Uzay nebula efektleri */
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: 
+                radial-gradient(ellipse at 20% 80%, rgba(30, 30, 50, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(50, 30, 60, 0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 40% 40%, rgba(30, 60, 50, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.8) 100%);
+            z-index: -1;
+            animation: nebula 60s ease-in-out infinite alternate;
+        }
+
+        @keyframes nebula {
+            0% { 
+                filter: hue-rotate(0deg) brightness(1);
+                transform: scale(1);
+            }
+            100% { 
+                filter: hue-rotate(30deg) brightness(1.1);
+                transform: scale(1.02);
+            }
+        }
+
+        /* Gezegen Halo Efekti */
+        .planet-halo {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 400px;
+            height: 400px;
+            margin: -200px 0 0 -200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, 
+                rgba(100, 200, 255, 0.15) 0%, 
+                rgba(50, 150, 255, 0.1) 30%, 
+                rgba(30, 144, 255, 0.05) 60%, 
+                transparent 100%);
+            z-index: 0;
+            animation: pulse 8s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                transform: scale(1);
+                opacity: 0.6;
+            }
+            50% { 
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+        }
+
+        /* Uzay temalı arkaplan */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+            background: 
+                radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+                radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+                radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
+                radial-gradient(2px 2px at 160px 30px, #ddd, transparent),
+                radial-gradient(1px 1px at 200px 120px, rgba(255,255,255,0.9), transparent),
+                radial-gradient(2px 2px at 240px 60px, #fff, transparent),
+                radial-gradient(1px 1px at 280px 100px, rgba(255,255,255,0.7), transparent),
+                radial-gradient(1px 1px at 320px 40px, #eee, transparent),
+                radial-gradient(2px 2px at 360px 90px, rgba(255,255,255,0.8), transparent);
+            background-repeat: repeat;
+            background-size: 400px 200px;
+            animation: sparkle 120s linear infinite;
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        @keyframes sparkle {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-400px); }
+        }
+
+        .star {
+            position: absolute;
+            background: #ffffff;
+            border-radius: 50%;
+            opacity: 0;
+            animation: twinkle 3s infinite;
+            box-shadow: 0 0 4px #ffffff;
+        }
+
+        .star.small {
+            width: 2px;
+            height: 2px;
+        }
+
+        .star.medium {
+            width: 3px;
+            height: 3px;
+        }
+
+        .star.large {
+            width: 4px;
+            height: 4px;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { 
+                opacity: 0.2; 
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 1; 
+                transform: scale(1.2);
+            }
+        }
+
+        /* Tam ekran Globe konteyner */
+        #globeViz {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(30, 144, 255, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at center, rgba(0, 17, 34, 0.2) 30%, rgba(0, 0, 0, 0.8) 70%);
+            z-index: 1;
+            cursor: grab;
+        }
+
+        #globeViz:active {
+            cursor: grabbing !important;
+        }
+
+        /* Auth Buttons (top right) */
+        .auth-buttons {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 280px;
+            background: transparent;
+            color: white;
+            padding: 0;
+            border-radius: 0;
+            backdrop-filter: none;
+            border: none;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .auth-btn {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 4px 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            backdrop-filter: blur(2px);
+            width: 65px;
+            box-sizing: border-box;
+            white-space: nowrap;
+        }
+
+        .auth-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #1e90ff;
+            box-shadow: 0 0 8px rgba(30, 144, 255, 0.2);
+        }
+
+        .auth-btn.signup:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #1e90ff;
+        }
+
+        /* Language Selector (aligned with auth buttons - top right) */
+        .language-selector {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            width: 140px;
+            background: transparent;
+            color: white;
+            padding: 0;
+            border-radius: 0;
+            backdrop-filter: none;
+            border: none;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0;
+            font-size: 14px;
+            box-sizing: border-box;
+            white-space: nowrap;
+        }
+
+        .language-selector select {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            width: 100%;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .language-selector select option {
+            background: rgba(30, 30, 50, 0.95);
+            color: white;
+            padding: 8px;
+        }
+
+        .language-selector select:focus {
+            outline: none;
+            border-color: #1e90ff;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 10px rgba(30, 144, 255, 0.3);
+        }
+
+        .language-selector select:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #1e90ff;
+            box-shadow: 0 0 10px rgba(30, 144, 255, 0.3);
+        }
+
+        /* Air Pollution Toggle (top left) */
+        .air-pollution-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 280px;
+            background: transparent;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            backdrop-filter: none;
+            border: none;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            box-sizing: border-box;
+            white-space: nowrap;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 25px;
+            background: #333;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;  /* Kutucuk kaldır */
+            outline: none; /* Focus outline kaldır */
+        }
+
+        .toggle-switch.active {
+            background: linear-gradient(45deg, #1e90ff, #87ceeb);  /* NASA mavi tonları */
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 21px;
+            height: 21px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            border: none;  /* Border kaldır */
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(25px);
+        }
+
+        /* Search Container (below air pollution toggle) */
+        .search-container-left {
+            position: fixed;
+            top: 80px;  /* Air pollution toggle'ın altına */
+            left: 20px;
+            width: 280px;
+            background: transparent;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            backdrop-filter: none;
+            border: none;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .search-container-left.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            height: 0;
+            overflow: hidden;
+            margin: 0;
+        }
+
+        .search-container-left input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .search-container-left input:focus {
+            outline: none;
+            border-color: #1e90ff;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 10px rgba(30, 144, 255, 0.3);
+        }
+
+        .search-container-left input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .search-container-left .control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .search-container-left .control-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border-color: #1e90ff;
+        }
+
+        /* Search Results Left */
+        .search-results-left {
+            position: fixed;
+            top: 200px;  /* Search container'ın altına */
+            left: 20px;
+            width: 280px;
+            max-height: 200px;
+            overflow-y: auto;
+            background: transparent;
+            border-radius: 8px;
+            z-index: 1000;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            display: none; /* Başlangıçta gizli */
+        }
+
+        .search-results-left::-webkit-scrollbar {
+            display: none;
+        }
+
+        .search-results-left.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            height: 0;
+            overflow: hidden;
+            margin: 0;
+        }
+
+        .search-results-left .search-result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            margin: 3px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-results-left .search-result-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(2px);
+        }
+
+        .search-results-left .search-result-item .city-name {
+            font-weight: 500;
+            color: #87ceeb;
+        }
+
+        .search-results-left .search-result-item .country-name {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .search-results-left .search-result-item .city-population {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Air Quality Scale Panel */
+        .air-quality-scale {
+            position: fixed;
+            top: 80px;  /* Air pollution toggle'ın altına */
+            left: 20px;
+            width: 280px;
+            background: rgba(30, 30, 50, 0.95);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            box-sizing: border-box;
+        }
+
+        .air-quality-scale.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .scale-header h4 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            color: #87ceeb;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .scale-items {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .scale-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            transition: background 0.2s ease;
+        }
+
+        .scale-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .scale-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            flex-shrink: 0;
+        }
+
+        .scale-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            overflow: hidden; /* Taşma önlenir */
+        }
+
+        .scale-range {
+            font-family: monospace;
+            font-size: 12px;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.9);
+            min-width: 60px;
+            flex-shrink: 0; /* Sabit kalır */
+        }
+
+        .scale-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            text-align: right;
+            flex: 1;
+            padding-left: 8px;
+            word-wrap: break-word; /* Uzun kelimeler sarılır */
+            overflow-wrap: break-word;
+        }
+
+        /* Air quality color classes */
+        .scale-item.good .scale-color {
+            background: #00e640; /* Yeşil */
+        }
+
+        .scale-item.moderate .scale-color {
+            background: #ffff00; /* Sarı */
+        }
+
+        .scale-item.unhealthy-sensitive .scale-color {
+            background: #ff7e00; /* Turuncu */
+        }
+
+        .scale-item.unhealthy .scale-color {
+            background: #ff0000; /* Kırmızı */
+        }
+
+        .scale-item.very-unhealthy .scale-color {
+            background: #8f3f97; /* Mor */
+        }
+
+        .scale-item.hazardous .scale-color {
+            background: #7e0023; /* Bordo */
+        }
+
+        /* Translation loading indicator */
+        .translating {
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Skip translation marker */
+        [data-i18n-skip] {
+            /* Elements with this attribute are excluded from automatic translation */
+            position: relative;
+        }
+
+        /* UI Panel (sağ üst köşe) - GİZLE */
+        .control-panel {
+            display: none; /* Sağ üst panel artık kullanılmıyor */
+        }
+
+
+
+
+
+        #citySearch {
+            width: 100%;
+            min-width: 250px;
+            max-width: 100%;
+            height: 40px;
+            padding: 10px 40px 10px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        #citySearch:focus {
+            outline: none;
+            border-color: #1e90ff;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        #citySearch::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        #clearSearch {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        /* Arama sonuçları */
+        #searchResults {
+            min-height: 0px;
+            max-height: 250px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            background: transparent;
+            display: none; /* Başlangıçta gizli */
+        }
+
+        /* Özel scrollbar */
+
+
+        /* Kontrol butonları */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        /* Search System - Hidden when air pollution is active */
+        .search-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .search-container.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            height: 0;
+            overflow: hidden;
+            margin: 0;
+        }
+
+        .search-container input {
+            padding: 12px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .search-container input:focus {
+            outline: none;
+            border-color: #1e90ff;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 10px rgba(30, 144, 255, 0.3);
+        }
+
+        .search-container input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .search-container button {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .search-container button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #1e90ff;
+        }
+
+        #searchResults {
+            max-height: 200px;
+            overflow-y: auto;
+            background: transparent;
+            border-radius: 8px;
+            margin-top: 10px;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        #searchResults.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            height: 0;
+            overflow: hidden;
+            margin: 0;
+        }
+
+        #searchResults {
+            scrollbar-width: none; /* Firefox için */
+            -ms-overflow-style: none; /* IE için */
+        }
+
+        #searchResults::-webkit-scrollbar {
+            display: none; /* Chrome, Safari için */
+        }
+
+        .search-result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            margin: 3px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-result-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(2px);
+        }
+
+        .search-result-item .city-name {
+            font-weight: 500;
+            color: #87ceeb;
+        }
+
+        .search-result-item .country-name {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .search-result-item .city-population {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border-color: #1e90ff;
+        }
+
+        /* Koordinat göstergesi */
+        .coordinates {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 14px;
+            z-index: 1000;
+        }
+
+        /* Loading spinner */
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 18px;
+            z-index: 2000;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid #1e90ff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Auth Modal Styles */
+        .auth-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(2px);
+        }
+
+        .auth-modal {
+            background: rgba(245, 245, 245, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .auth-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 15px;
+        }
+
+        .auth-modal-header h2 {
+            color: #1e90ff;
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ff6b6b;
+        }
+
+        .auth-form .form-group {
+            margin-bottom: 20px;
+        }
+
+        .auth-form label {
+            display: block;
+            color: white;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .auth-form input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .auth-form input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .auth-form input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .auth-submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            backdrop-filter: blur(5px);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .auth-submit-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+            border-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .send-code-btn {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            min-width: 80px;
+            backdrop-filter: blur(5px);
+        }
+
+        .send-code-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Country Panel (Side) */
+        .country-panel {
+            position: fixed;
+            right: -350px;
+            top: 0;
+            width: 350px;
+            height: 100vh;
+            background: rgba(20, 20, 40, 0.95);
+            color: white;
+            z-index: 1500;
+            transition: right 0.3s ease;
+            overflow-y: auto;
+            backdrop-filter: blur(15px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .country-panel:not(.hidden) {
+            right: 0;
+        }
+
+        .panel-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header h3 {
+            color: #87ceeb;
+            font-size: 18px;
+        }
+
+        .panel-header button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #87ceeb;
+            font-size: 10px;
+            cursor: pointer;
+            padding: 3px 6px;
+            border-radius: 3px;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .panel-header button:hover {
+            background: rgba(30, 144, 255, 0.2);
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .auth-buttons {
+                top: 10px;
+                right: 10px;
+                width: calc(100vw - 40px);
+                max-width: 300px;
+                font-size: 12px;
+                justify-content: center;
+            }
+            
+            .language-selector {
+                top: 70px;
+                right: 10px;
+                width: calc(100vw - 40px);
+                max-width: 300px;
+                font-size: 12px;
+                justify-content: center;
+            }
+            
+            .air-pollution-toggle {
+                top: 10px;
+                left: 10px;
+                width: calc(100vw - 40px);
+                max-width: 300px;
+            }
+            
+            .search-container-left {
+                top: 70px;
+                left: 10px;
+                width: calc(100vw - 40px);
+                max-width: 300px;
+            }
+            
+            .search-results-left {
+                top: 190px;
+                left: 10px;
+                width: calc(100vw - 40px);
+                max-width: 300px;
+            }
+            
+            .air-quality-scale {
+                top: 70px;
+                left: 10px;
+                width: calc(100vw - 40px);
+                max-width: 300px;
+                padding: 12px;
+            }
+            
+            .scale-header h4 {
+                font-size: 13px;
+            }
+            
+            .scale-range, .scale-label {
+                font-size: 11px;
+            }
+            
+            .coordinates {
+                bottom: 10px;
+                left: 10px;
+                right: 10px;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-buttons {
+                width: calc(100vw - 20px);
+                font-size: 11px;
+                justify-content: center;
+            }
+            
+            .auth-btn {
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+            
+            .language-selector {
+                width: calc(100vw - 20px);
+                justify-content: center;
+            }
+            
+            .air-pollution-toggle {
+                width: calc(100vw - 20px);
+            }
+            
+            .search-container-left {
+                width: calc(100vw - 20px);
+            }
+            
+            .search-results-left {
+                width: calc(100vw - 20px);
+            }
+            
+            .air-quality-scale {
+                width: calc(100vw - 20px);
+            }
+            
+            .air-pollution-toggle {
+                width: 160px; /* Language selector ile eşit */
+            }
+            
+            .air-quality-scale {
+                width: calc(100vw - 40px);
+                max-width: 240px; /* Daha geniş maksimum */
+            }
+            
+            .scale-items {
+                gap: 6px;
+            }
+            
+            .scale-item {
+                padding: 4px 6px;
+            }
+            
+            .scale-color {
+                width: 14px;
+                height: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Yıldızlı arkaplan -->
+    <div class="stars" id="starsContainer"></div>
+
+    <!-- Sadece uzay efektleri -->
+    <div class="background-overlay"></div>
+    
+    <!-- Gezegen Halo Efekti -->
+    <div class="planet-halo"></div>
+
+    <!-- Auth Buttons -->
+    <div class="auth-buttons">
+        <button class="auth-btn login" data-i18n="auth.login">Log In</button>
+        <button class="auth-btn signup" data-i18n="auth.signup">Sign Up</button>
+    </div>
+
+    <!-- Language Selector -->
+    <div class="language-selector">
+        <select id="langSelect">
+            <option value="tr">Türkçe</option>
+            <option value="en">English</option>
+        </select>
+    </div>
+
+    <!-- Air Pollution Toggle -->
+    <div class="air-pollution-toggle">
+        <span></span>
+        <span data-i18n="air.pollution">Air Pollution</span>
+        <div class="toggle-switch" id="airPollutionToggle">
+            <div class="toggle-slider"></div>
+        </div>
+    </div>
+
+    <!-- Search Container (Left Side) -->
+    <div class="search-container-left" id="searchContainerLeft">
+        <input type="text" id="citySearchLeft" data-i18n-placeholder="search.placeholder" placeholder="Search cities...">
+        <button class="control-btn" id="locationBtnLeft" data-i18n="btn.location">Find My Location</button>
+    </div>
+    
+    <!-- Search Results (Left Side) -->
+    <div class="search-results-left" id="searchResultsLeft"></div>
+
+    <!-- Air Quality Scale Panel (shown when air pollution is active) -->
+    <div class="air-quality-scale" id="airQualityScale" style="display: none;">
+        <div class="scale-header">
+            <h4 data-i18n="air.quality.scale.title">Air Quality Scale</h4>
+        </div>
+        <div class="scale-items">
+            <div class="scale-item good">
+                <div class="scale-color"></div>
+                <div class="scale-info">
+                    <span class="scale-range">0-50</span>
+                    <span class="scale-label" data-i18n="air.quality.good">Good</span>
+                </div>
+            </div>
+            <div class="scale-item moderate">
+                <div class="scale-color"></div>
+                <div class="scale-info">
+                    <span class="scale-range">51-100</span>
+                    <span class="scale-label" data-i18n="air.quality.moderate">Good-Moderate</span>
+                </div>
+            </div>
+            <div class="scale-item unhealthy-sensitive">
+                <div class="scale-color"></div>
+                <div class="scale-info">
+                    <span class="scale-range">101-150</span>
+                    <span class="scale-label" data-i18n="air.quality.unhealthy.sensitive">Moderate</span>
+                </div>
+            </div>
+            <div class="scale-item unhealthy">
+                <div class="scale-color"></div>
+                <div class="scale-info">
+                    <span class="scale-range">151-200</span>
+                    <span class="scale-label" data-i18n="air.quality.unhealthy">Moderate-Unhealthy</span>
+                </div>
+            </div>
+            <div class="scale-item very-unhealthy">
+                <div class="scale-color"></div>
+                <div class="scale-info">
+                    <span class="scale-range">201-300</span>
+                    <span class="scale-label" data-i18n="air.quality.very.unhealthy">Unhealthy</span>
+                </div>
+            </div>
+            <div class="scale-item hazardous">
+                <div class="scale-color"></div>
+                <div class="scale-info">
+                    <span class="scale-range">300+</span>
+                    <span class="scale-label" data-i18n="air.quality.hazardous">Very Unhealthy</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div class="loading" id="loadingIndicator">
+        <div class="spinner"></div>
+        <div id="loadingText" data-i18n="loading.text">Loading 3D World...</div>
+    </div>
+
+    <!-- Globe Container (Full Screen) -->
+    <div id="globeViz"></div>
+
+    <!-- Control Panel -->
+    <div class="control-panel">
+        <!-- Search -->
+        <div class="search-container">
+            <input type="text" id="citySearch" data-i18n-placeholder="search.placeholder" placeholder="Search cities...">
+            <button id="clearSearch" data-i18n="btn.clear">Clear</button>
+        </div>
+        
+        <!-- Search Results -->
+        <div id="searchResults"></div>
+        
+        <!-- Control Buttons -->
+        <div class="controls">
+            <button class="control-btn" id="locationBtn" data-i18n="btn.location"></button>
+        </div>
+    </div>
+
+    <!-- Coordinates Display -->
+    <div class="coordinates" id="coordinates">0°N, 0°E</div>
+
+    <!-- Country Panel (Side) -->
+    <aside id="countryPanel" class="country-panel hidden" aria-labelledby="countryPanelTitle">
+        <header class="panel-header">
+            <h3 id="countryPanelTitle" data-i18n="country.panel.title">Country Information</h3>
+            <button id="closeCountryPanel" data-i18n="btn.close">Close</button>
+        </header>
+        <div id="countryInfo" class="country-info">
+            <!-- Country details will be populated here -->
+            <div class="country-controls">
+                <label><input type="checkbox" id="toggleCountryPoints"> <span data-i18n="country.toggle.points">Show city points</span></label>
+            </div>
+        </div>
+    </aside>
+
+    <!-- i18n Scripts -->
+    <script src="js/i18n-core.js"></script>
+    <script src="js/translator.js"></script>
+
+    <!-- City Boundaries System -->
+    <script src="js/turkey-provinces-boundaries.js"></script>
+    <script src="js/usa-states-boundaries.js"></script>
+
+    <!-- External Libraries -->
+    <!-- Globe.gl includes its own Three.js, no need for separate Three.js -->
+    <script src="https://unpkg.com/globe.gl"></script>
+
+    <!-- Three.js compatibility: Globe.gl includes Three.js internally -->
+    <script>
+        // Globe.gl'in internal Three.js'ini global olarak erişilebilir yap (eğer gerekirse)
+        // Bu sayede mevcut kodlar çalışmaya devam eder
+        window.addEventListener('load', function() {
+            if (typeof Globe !== 'undefined' && Globe.THREE) {
+                window.THREE = Globe.THREE;
+                console.log('✅ Three.js via Globe.gl loaded successfully');
+            } else if (typeof THREE === 'undefined') {
+                console.log('ℹ️ Globe.gl internal Three.js being used (no global THREE needed)');
+            }
+        });
+    </script>
+
+    <!-- Main Application -->
+    <script type="module" src="main.js"></script>
+
+    <!-- ACIL LOCATION BUTTON FIX -->
+    <script>
+        // Fallback metni asla görünmesin diye hemen güncelle
+        document.addEventListener('DOMContentLoaded', function() {
+            const locationBtn = document.getElementById('locationBtn');
+            const locationBtnLeft = document.getElementById('locationBtnLeft');
+            
+            if (locationBtn) {
+                // Immediately hide any fallback text
+                locationBtn.textContent = '';
+                locationBtn.style.visibility = 'hidden';
+                
+                // Show button once i18n is ready
+                setTimeout(() => {
+                    if (window.i18n) {
+                        const text = window.i18n.t('btn.location');
+                        if (text && text !== 'btn.location') {
+                            locationBtn.textContent = text;
+                            locationBtn.style.visibility = 'visible';
+                        }
+                    }
+                }, 100);
+            }
+
+            if (locationBtnLeft) {
+                // Sol taraftaki location butonu için aynı işlem
+                locationBtnLeft.textContent = '';
+                locationBtnLeft.style.visibility = 'hidden';
+                
+                setTimeout(() => {
+                    if (window.i18n) {
+                        const text = window.i18n.t('btn.location');
+                        if (text && text !== 'btn.location') {
+                            locationBtnLeft.textContent = text;
+                            locationBtnLeft.style.visibility = 'visible';
+                        }
+                    }
+                }, 100);
+            }
+        });
+    </script>
+
+    <!-- Yıldız arkaplanı oluşturucu -->
+    <script>
+        let starsRotationX = 0;
+        let starsRotationY = 0;
+        let isDragging = false;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+
+        function createStars() {
+            const starsContainer = document.getElementById('starsContainer');
+            console.log('Stars container:', starsContainer); // Test için
+            
+            if (!starsContainer) {
+                console.error('Stars container bulunamadı!');
+                return;
+            }
+
+            const numberOfStars = 300; // Daha fazla yıldız
+
+            for (let i = 0; i < numberOfStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                // Rastgele boyut seç
+                const sizes = ['small', 'medium', 'large'];
+                const randomSize = sizes[Math.floor(Math.random() * sizes.length)];
+                star.classList.add(randomSize);
+                
+                // Rastgele pozisyon
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                
+                // Rastgele animasyon gecikmesi
+                star.style.animationDelay = Math.random() * 5 + 's';
+                
+                // Rastgele animasyon süresi
+                star.style.animationDuration = (2 + Math.random() * 6) + 's';
+                
+                starsContainer.appendChild(star);
+            }
+            
+            console.log(`${numberOfStars} yıldız oluşturuldu!`); // Test için
+        }
+
+        function updateStarsRotation() {
+            const starsContainer = document.getElementById('starsContainer');
+            if (starsContainer) {
+                // Çok daha ince dönüş efekti
+                starsContainer.style.transform = `translate(${starsRotationY * -0.5}px, ${starsRotationX * 0.3}px)`;
+            }
+        }
+
+        function setupStarsRotation() {
+            const globeViz = document.getElementById('globeViz');
+            
+            if (!globeViz) return;
+
+            // Mouse down event
+            globeViz.addEventListener('mousedown', function(e) {
+                isDragging = true;
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+                globeViz.style.cursor = 'grabbing';
+            });
+
+            // Mouse move event
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+
+                const deltaX = e.clientX - lastMouseX;
+                const deltaY = e.clientY - lastMouseY;
+
+                // Çok ince paralaks efekti
+                starsRotationY += deltaX * 0.02;
+                starsRotationX += deltaY * 0.015;
+
+                // Daha geniş sınırlar
+                starsRotationX = Math.max(-50, Math.min(50, starsRotationX));
+                starsRotationY = Math.max(-100, Math.min(100, starsRotationY));
+
+                updateStarsRotation();
+
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+            });
+
+            // Mouse up event
+            document.addEventListener('mouseup', function() {
+                isDragging = false;
+                globeViz.style.cursor = 'grab';
+            });
+
+            // Touch events for mobile
+            globeViz.addEventListener('touchstart', function(e) {
+                isDragging = true;
+                const touch = e.touches[0];
+                lastMouseX = touch.clientX;
+                lastMouseY = touch.clientY;
+                e.preventDefault();
+            });
+
+            document.addEventListener('touchmove', function(e) {
+                if (!isDragging) return;
+
+                const touch = e.touches[0];
+                const deltaX = touch.clientX - lastMouseX;
+                const deltaY = touch.clientY - lastMouseY;
+
+                starsRotationY += deltaX * 0.02;
+                starsRotationX += deltaY * 0.015;
+
+                starsRotationX = Math.max(-50, Math.min(50, starsRotationX));
+                starsRotationY = Math.max(-100, Math.min(100, starsRotationY));
+
+                updateStarsRotation();
+
+                lastMouseX = touch.clientX;
+                lastMouseY = touch.clientY;
+                e.preventDefault();
+            });
+
+            document.addEventListener('touchend', function() {
+                isDragging = false;
+            });
+
+            console.log('Yıldız rotasyon sistemi kuruldu!');
+        }
+
+        // Sayfa yüklendiğinde yıldızları oluştur
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM yüklendi, yıldızları oluşturuluyor...');
+            createStars();
+            setupStarsRotation();
+        });
+        
+        // Yedek olarak window.onload da dene
+        window.addEventListener('load', function() {
+            if (!document.querySelector('.star')) {
+                console.log('Yıldızlar bulunamadı, tekrar oluşturuluyor...');
+                createStars();
+            }
+            setupStarsRotation();
+        });
+    </script>
+</body>
+</html>

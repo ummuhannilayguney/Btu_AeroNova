@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title" data-i18n="state.page.title">Eyalet Şehirleri</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('./images/usa_bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* Ana container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* Başlık alanı */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px 20px;
+        }
+
+        .state-name {
+            font-size: 3em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+            color: white;
+        }
+
+        .state-subtitle {
+            font-size: 1.2em;
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Geri dön butonu */
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+        }
+
+        .back-button:hover {
+            background: rgba(0, 0, 0, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Arama alanı */
+        .search-container {
+            max-width: 500px;
+            margin: 0 auto 30px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: rgba(64, 150, 255, 0.8);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 20px rgba(64, 150, 255, 0.3);
+        }
+
+        /* Şehir sayısı */
+        .cities-count {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Şehirler grid */
+        .cities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        /* Şehir kartı */
+        .city-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .city-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(64, 150, 255, 0.6);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .city-name {
+            font-size: 1.4em;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: white;
+        }
+
+        .city-info {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95em;
+            line-height: 1.4;
+        }
+
+        .city-population {
+            color: rgba(100, 200, 255, 0.9);
+            font-weight: 500;
+        }
+
+        .city-coordinates {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85em;
+            margin-top: 5px;
+        }
+
+        /* Hava kalitesi butonu */
+        .air-quality-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(64, 150, 255, 0.8);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        .city-card:hover .air-quality-btn {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .air-quality-btn:hover {
+            background: rgba(64, 150, 255, 1);
+            transform: scale(1.05);
+        }
+
+        /* Loading ve boş durum */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            font-size: 1.2em;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .no-cities {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .no-cities h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .state-name {
+                font-size: 2.2em;
+            }
+
+            .cities-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .back-button {
+                position: relative;
+                display: inline-block;
+                margin-bottom: 20px;
+            }
+
+            .container {
+                padding: 15px;
+            }
+        }
+
+        /* Animasyonlar */
+        .city-card {
+            animation: fadeInUp 0.6s ease forwards;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .city-card:nth-child(1) { animation-delay: 0.1s; }
+        .city-card:nth-child(2) { animation-delay: 0.2s; }
+        .city-card:nth-child(3) { animation-delay: 0.3s; }
+        .city-card:nth-child(4) { animation-delay: 0.4s; }
+        .city-card:nth-child(5) { animation-delay: 0.5s; }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Geri dön butonu -->
+        <a href="javascript:history.back()" class="back-button">
+            <span data-i18n="state.page.back">← Amerika Birleşik Devletleri'ne Dön</span>
+        </a>
+
+        <!-- Başlık -->
+        <div class="header">
+            <h1 class="state-name" id="stateName" data-i18n="state.page.loading">Eyalet Yükleniyor...</h1>
+            <p class="state-subtitle" data-i18n="state.page.cities.info">Şehirler ve Hava Kalitesi Bilgileri</p>
+        </div>
+
+        <!-- Arama -->
+        <div class="search-container">
+            <input type="text" class="search-input" id="citySearch" data-i18n-placeholder="state.page.search" placeholder="Şehir ara...">
+        </div>
+
+        <!-- Şehir sayısı -->
+        <div class="cities-count" id="citiesCount">
+            <span data-i18n="state.page.loading">Şehirler yükleniyor...</span>
+        </div>
+
+        <!-- Şehirler -->
+        <div class="cities-grid" id="citiesGrid">
+            <div class="loading">
+                <span data-i18n="state.page.loading">Şehirler yükleniyor...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Çeviri sistem dosyalarını ekle -->
+    <script src="js/i18n-core.js"></script>
+    <script src="js/translator.js"></script>
+    
+    <script>
+        // Global değişkenler
+        let allCities = [];
+        let filteredCities = [];
+        let currentState = '';
+        
+        // Çeviri sistemi başlatma
+        async function initI18n() {
+            try {
+                if (window.i18n) {
+                    await window.i18n.initialize();
+                    console.log('✅ i18n system initialized for state-detail page');
+                    
+                    // Dil değişiklik dinleyicisi ekle
+                    setupLanguageChangeListener();
+                } else {
+                    console.warn('⚠️ i18n system not found');
+                }
+            } catch (error) {
+                console.error('❌ Error initializing i18n:', error);
+            }
+        }
+        
+        // Dil değişiklik dinleyicisi - localStorage ve ana sayfa değişikliklerini dinle
+        function setupLanguageChangeListener() {
+            // localStorage değişikliklerini dinle
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'preferredLanguage') {
+                    console.log('🌐 Language changed to:', e.newValue);
+                    setTimeout(() => {
+                        updateCitiesCount();
+                        renderCities();
+                        
+                        const params = getUrlParams();
+                        updatePageTitle(params.state);
+                    }, 100);
+                }
+            });
+            
+            // Periyodik kontrol (ana sayfadan dil değişikliği için)
+            let lastLanguage = window.i18n ? window.i18n.currentLanguage : 'tr';
+            setInterval(() => {
+                const currentLanguage = window.i18n ? window.i18n.currentLanguage : 'tr';
+                if (currentLanguage !== lastLanguage) {
+                    lastLanguage = currentLanguage;
+                    console.log('🌐 Language detected change to:', currentLanguage);
+                    updateCitiesCount();
+                    renderCities();
+                    
+                    const params = getUrlParams();
+                    updatePageTitle(params.state);
+                }
+            }, 1000);
+        }
+
+        // Sayfa yüklendiğinde başlat
+        document.addEventListener('DOMContentLoaded', async function() {
+            await initI18n();
+            initializePage();
+        });
+
+        // Sayfayı başlat
+        function initializePage() {
+            const params = getUrlParams();
+            currentState = params.state || 'Unknown State';
+            
+            console.log('📍 Eyalet sayfası yükleniyor:', currentState);
+            
+            // Sayfa başlığını güncelle
+            updatePageTitle(currentState);
+            
+            // Şehirleri yükle
+            loadStateCities(currentState);
+            
+            // Arama özelliğini başlat
+            setupSearch();
+        }
+
+        // URL parametrelerini al
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                state: params.get('state') || 'Unknown State',
+                country: params.get('country') || 'United States'
+            };
+        }
+
+        // Sayfa başlığını güncelle
+        function updatePageTitle(stateName) {
+            const titleSuffix = window.t ? window.t('state.page.title', 'Şehirler') : 'Şehirler';
+            document.getElementById('page-title').textContent = `${stateName} - ${titleSuffix}`;
+            document.getElementById('stateName').textContent = stateName;
+        }
+
+        // Eyalet şehirlerini yükle
+        async function loadStateCities(stateName) {
+            try {
+                console.log('🔄 Şehir verisi yükleniyor:', stateName);
+                
+                // CSV dosyasını oku
+                const response = await fetch('./data/worldcities.csv');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const csvText = await response.text();
+                const cities = parseCSV(csvText);
+                
+                // Bu eyaletin şehirlerini filtrele
+                const stateCities = cities.filter(city => {
+                    return city.country === 'United States' && 
+                           city.iso2 === 'US' && 
+                           city.admin_name === stateName;
+                });
+
+                // Şehir verilerini düzenle
+                allCities = stateCities.map(city => ({
+                    name: city.city || city.city_ascii || city.name,
+                    population: city.population ? parseInt(city.population) : 0,
+                    lat: parseFloat(city.lat),
+                    lng: parseFloat(city.lng),
+                    state: city.admin_name,
+                    id: city.id
+                })).filter(city => city.name && !isNaN(city.lat) && !isNaN(city.lng));
+
+                // Nüfusa göre sırala
+                allCities.sort((a, b) => {
+                    if (a.population && b.population) {
+                        return b.population - a.population;
+                    }
+                    if (a.population && !b.population) return -1;
+                    if (!a.population && b.population) return 1;
+                    return a.name.localeCompare(b.name);
+                });
+
+                filteredCities = [...allCities];
+                
+                console.log(`✅ ${stateName} eyaletinde ${allCities.length} şehir bulundu`);
+                
+                // Şehirleri göster
+                renderCities();
+                updateCitiesCount();
+                
+            } catch (error) {
+                console.error('❌ Şehir verisi yüklenirken hata:', error);
+                showError();
+            }
+        }
+
+        // CSV verilerini parse et
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            const headers = lines[0].split(',').map(h => h.replace(/"/g, ''));
+            const cities = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+
+                const values = parseCSVLine(line);
+                if (values.length >= headers.length) {
+                    const city = {};
+                    headers.forEach((header, index) => {
+                        city[header] = values[index] ? values[index].replace(/"/g, '') : '';
+                    });
+                    cities.push(city);
+                }
+            }
+
+            return cities;
+        }
+
+        // CSV satırını parse et
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"' && (i === 0 || line[i-1] === ',')) {
+                    inQuotes = true;
+                } else if (char === '"' && inQuotes && (i === line.length - 1 || line[i+1] === ',')) {
+                    inQuotes = false;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            
+            result.push(current.trim());
+            return result;
+        }
+
+        // Şehirleri render et
+        function renderCities() {
+            const grid = document.getElementById('citiesGrid');
+            
+            if (filteredCities.length === 0) {
+                const noCitiesText = window.t ? window.t('state.page.no.cities', 'Şehir bulunamadı') : 'Şehir bulunamadı';
+                const tryDifferentText = window.t ? window.t('state.page.try.different', 'Farklı bir arama terimi deneyin') : 'Arama kriterlerinizi değiştirmeyi deneyin';
+                
+                grid.innerHTML = `
+                    <div class="no-cities">
+                        <h3>${noCitiesText}</h3>
+                        <p>${tryDifferentText}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const airQualityText = window.t ? window.t('state.page.air.quality', 'Hava Kalitesi') : 'Hava Kalitesi';
+            const populationText = window.t ? window.t('state.page.population', 'Nüfus') : 'Nüfus';
+            
+            const citiesHTML = filteredCities.map(city => `
+                <div class="city-card" onclick="openCityDetail('${escapeHtml(city.name)}', '${escapeHtml(city.state)}')">
+                    <button class="air-quality-btn" onclick="event.stopPropagation(); openCityDetail('${escapeHtml(city.name)}', '${escapeHtml(city.state)}')">
+                        ${airQualityText}
+                    </button>
+                    <div class="city-name">${escapeHtml(city.name)}</div>
+                    <div class="city-info">
+                        ${city.population > 0 ? `<div class="city-population">${populationText}: ${formatPopulation(city.population)}</div>` : ''}
+                        <div class="city-coordinates">${city.lat.toFixed(4)}, ${city.lng.toFixed(4)}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            grid.innerHTML = citiesHTML;
+        }
+
+        // Şehir sayısını güncelle
+        function updateCitiesCount() {
+            const countElement = document.getElementById('citiesCount');
+            const total = allCities.length;
+            const showing = filteredCities.length;
+            
+            const foundText = window.t ? window.t('state.page.cities.found', 'şehir bulundu') : 'şehir bulundu';
+            const showingText = window.t ? window.t('state.page.cities.showing', 'şehir gösteriliyor') : 'şehir gösteriliyor';
+            const totalText = window.t ? window.t('state.page.cities.total', 'toplam') : 'toplam';
+            
+            if (showing === total) {
+                countElement.textContent = `${total} ${foundText}`;
+            } else {
+                countElement.textContent = `${showing} ${showingText} (${totalText} ${total})`;
+            }
+        }
+
+        // Arama özelliğini ayarla
+        function setupSearch() {
+            const searchInput = document.getElementById('citySearch');
+            let searchTimeout;
+
+            searchInput.addEventListener('input', function(e) {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    filterCities(e.target.value);
+                }, 300);
+            });
+        }
+
+        // Şehirleri filtrele
+        function filterCities(query) {
+            if (!query.trim()) {
+                filteredCities = [...allCities];
+            } else {
+                filteredCities = allCities.filter(city => 
+                    city.name.toLowerCase().includes(query.toLowerCase())
+                );
+            }
+            
+            renderCities();
+            updateCitiesCount();
+        }
+
+        // Şehir detay sayfasını aç
+        function openCityDetail(cityName, stateName) {
+            console.log('🏙️ Şehir detayı açılıyor:', cityName, stateName);
+            
+            const params = new URLSearchParams({
+                city: cityName,
+                state: stateName,
+                country: 'United States'
+            });
+            
+            const url = `city-detail.html?${params.toString()}`;
+            window.location.href = url;
+        }
+
+        // Nüfusu formatla
+        function formatPopulation(pop) {
+            if (pop >= 1000000) {
+                return `${(pop / 1000000).toFixed(1)}M`;
+            } else if (pop >= 1000) {
+                return `${(pop / 1000).toFixed(0)}K`;
+            }
+            return pop.toLocaleString();
+        }
+
+        // HTML escape
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Hata durumunu göster
+        function showError() {
+            const grid = document.getElementById('citiesGrid');
+            const errorTitle = window.t ? window.t('state.page.error.title', 'Veri yüklenirken hata oluştu') : 'Veri yüklenirken hata oluştu';
+            const errorRetry = window.t ? window.t('state.page.error.retry', 'Sayfayı yenilemeyi deneyin') : 'Sayfayı yenilemeyi deneyin';
+            const errorMessage = window.t ? window.t('state.page.error.message', 'Veri yüklenemedi') : 'Veri yüklenemedi';
+            
+            grid.innerHTML = `
+                <div class="no-cities">
+                    <h3>${errorTitle}</h3>
+                    <p>${errorRetry}</p>
+                </div>
+            `;
+            
+            document.getElementById('citiesCount').textContent = errorMessage;
+        }
+    </script>
+</body>
+</html>
