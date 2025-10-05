@@ -1,0 +1,39 @@
+{
+  "horizons": [
+    24,
+    48,
+    72,
+    96,
+    120,
+    144,
+    168
+  ],
+  "trained_at": "2025-09-30T17:04:27.522414",
+  "data_shape": [
+    720,
+    12
+  ],
+  "time_span": [
+    "2025-08-31 17:00:00",
+    "2025-09-30 16:00:00"
+  ],
+  "parameter": "PM25",
+  "city_key": "Denver, CO",
+  "city_meta": {
+    "lat": 39.7392,
+    "lon": -104.9903,
+    "name": "Denver, CO"
+  },
+  "model_count": 7,
+  "interval_method": "quantile",
+  "feature_config": {
+    "use_weather": true,
+    "use_cyclical": true,
+    "use_exog": true
+  },
+  "airnow_integration": {
+    "available_cities_count": 73,
+    "api_endpoint": "https://www.airnowapi.org/aq/observation/latLong/current/",
+    "coordinates_source": "airnow_viewer.py"
+  }
+}
